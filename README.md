@@ -27,18 +27,18 @@ Avoid multiple redirections when resolving seo friendly urls
     
      // push a washing machine
 
-     .push(function whirlpool(req, res, dry){
+     .push(function whirlpool(req, status, url, next){
 
       // some logic ... then ...
 
       // change nothing and go to the next washing-machine (WM)
-      return dry();
+      return next();
 
       // pass an error to the next middleware (MW)
-      return dry(new Error('Wow')); 
+      return next(new Error('Wow')); 
 
       // pass a modification so that it loops back to the first WM
-      return dry(null, {
+      return next(null, {
         status : 303,
         url : 'http://so.me/st/uff'
       });
@@ -60,3 +60,5 @@ Avoid multiple redirections when resolving seo friendly urls
 
 - If there is more loop than washing-machines an error is passed to the next Mw ... well that could change
 - ...
+
+

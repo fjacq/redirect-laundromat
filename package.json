@@ -1,0 +1,30 @@
+{
+  "name": "redirect-laundromat",
+  "version": "0.0.0",
+  "description": "Modular redirection resolutions middleware",
+  "main": "lib/",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha -R spec test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/slyg/redirect-laundromat.git"
+  },
+  "keywords": [
+    "redirect",
+    "middleware"
+  ],
+  "author": "Sylvain Faucherand <syl.faucherand@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/slyg/redirect-laundromat/issues"
+  },
+  "homepage": "https://github.com/slyg/redirect-laundromat",
+  "devDependencies": {
+    "mocha": "^1.20.1",
+    "rewire": "^2.0.1"
+  }
+}
