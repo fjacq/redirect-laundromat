@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha -R spec test/"
+    "test": "jshint --verbose lib/ test/ && mocha -R spec test/"
   },
   "repository": {
     "type": "git",
@@ -25,6 +25,7 @@
   "homepage": "https://github.com/slyg/redirect-laundromat",
   "devDependencies": {
     "chai": "^1.9.1",
+    "jshint": "^2.5.1",
     "mocha": "^1.20.1",
     "rewire": "^2.0.1"
   }
