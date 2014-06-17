@@ -2,7 +2,7 @@
 
 ## Goal
 
-Avoid multiple redirections when resolving seo friendly urls
+Avoid multiple redirections when resolving seo friendly urls.
 
 ## Proposed solution
 
@@ -51,14 +51,14 @@ Avoid multiple redirections when resolving seo friendly urls
 
   // used after customization
 
-  app.use(laundromat()); // laundromat() returns a middleware
+  app.use(laundromat.wash()); // laundromat.wash() returns a middleware
 
 
 ```
 
 ## Special rules
 
-- If there is more loop than washing-machines an error is passed to the next Mw ... well that could change
+- If there is more loop than washing-machines an error is passed to the next MW ... well that could change
 - ...
 
 

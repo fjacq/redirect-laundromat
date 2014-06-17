@@ -1,3 +1,6 @@
+/* jshint -W030 */
+
+var expect = require('chai').expect;
 var rewire = require('rewire');
 var Laundromat;
 
@@ -6,28 +9,67 @@ beforeEach(function(){
 });
 
 describe('Laundromat class - `Laundromat`', function(){
-  it('should exist');
-  it('should be a Function');
+  it('should exist', function(){
+    expect(Laundromat).to.be.ok;
+  });
+  it('should be a Function', function(){
+    expect(Laundromat).to.be.a('function');
+  });
 });
 
 describe('Laundromat instance - `laundromat`', function(){
 
-  it('should exist');
-  it('should be a Function');
+  var laundromat;
+
+  function washingMachine(req, status, url, next){}
+
+  beforeEach(function(){
+    laundromat = new Laundromat();
+  });
+
+  it('should exist', function(){
+    expect(laundromat).to.exist;
+  });
 
   context('push() method - `laundromat.push()`', function(){
 
-    it('should exist');
-    it('should take a washing machine function and return itself - `function(req, status, url, next){...}`');
-    it('should throw when passed function is not a washing machine function - `function(req, status, url, next){...}`');
-    it('should push passed function to its `_washingMachines` array property');
+    it('should exist', function(){
+      expect(laundromat).to.have.property('push');
+    });
+    it('should take a washing machine function and return itself', function(){
+      expect(laundromat.push(washingMachine)).to.be.an.instanceof(Laundromat);
+    });
+    it('should throw when passed parameter doesn\'t have a washing machine signature (arity of 4)', function(){
+      expect(function(){
+        return laundromat.push('');
+      }).to.throw();
+      expect(function(){
+        return laundromat.push(function(){});
+      }).to.throw();
+    });
+    it('should push passed function to its `_washingMachines` array property', function(){
+
+      laundromat
+          .push(washingMachine)
+          .push(washingMachine);
+
+      expect(laundromat._washingMachines.length).to.eql(2);
+
+      laundromat
+          .push(washingMachine);
+
+      expect(laundromat._washingMachines.length).to.eql(3);
+
+    });
 
   });
 
 });
 
-describe('Laundromat middleware - `laundromat()`', function(){
+describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
 
+  it('should exist');
+  it('should be a middleware');
   it('should sequentially call `_washingMachines` functions with parameters `req`, `status`, `url` and `next` continuation function');
   it('should pass an error to the next MW when `next` callback receives an error');
   it('should pass an error to the next MW when `next` callback receives a mis-formatted modification object');
