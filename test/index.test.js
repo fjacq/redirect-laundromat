@@ -68,18 +68,267 @@ describe('Laundromat instance - `laundromat`', function(){
 
 describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
 
-  it('should exist');
-  it('should be a middleware');
-  it('should sequentially call `_washingMachines` functions with parameters `req`, `status`, `url` and `next` continuation function');
-  it('should pass an error to the next MW when `next` callback receives an error');
-  it('should pass an error to the next MW when `next` callback receives a mis-formatted modification object');
-  it('should loop back to the first washing machine function when a change is performed - aka `next` callback receives a modification object');
-  it('should increment its `_loopsCount` value when a new loop is performed');
-  it('should pass an error when its `_loopsCount` value exceeds `_washingMachines` length');
-  it('should provide `res`\'s statusCode and url as default context to the first washing machine');
-  it('should provide `req` to each washing machine');
-  it('should provide a modified statusCode and url when loop starts again washing machine');
-  it('should perform a redirection when `status` or `url` properties have been modified');
-  it('should call the next middleware when neither `status` nor `url` properties have been modified');
+  var laundromat,
+  req,
+  requestUrl = 'http://so.me/stuff';
+
+  function emptyWM(req, status, url, next){
+    next();
+  }
+
+  function brokenWM(req, status, url, next){
+    next(new Error('Lime-scale failure'));
+  }
+
+  function cleaningWM(req, status, url, next){
+    next(null, {
+      status : 307,
+      url : 'http://so.me/new/stuff'
+    });
+  }
+
+  beforeEach(function(){
+    laundromat = new Laundromat();
+    req = {
+      url : requestUrl,
+      originalUrl : requestUrl,
+      protocol : 'http',
+      xhr : false,
+      host : 'so.me',
+      path : '/stuff',
+      ip : '127.0.0.1'
+    };
+    res = {
+      statusCode : 200,
+      status : function(statusCode){
+        res.statusCode = statusCode;
+      },
+      redirect : function(){}
+    };
+  });
+
+  it('should exist', function(){
+    expect(laundromat).to.have.property('wash')
+      .that.is.a('function');
+  });
+  it('should be signed as a middleware', function(){
+    expect(laundromat.wash.length).to.eql(3);
+  });
+  it('should provide `res`\'s statusCode and url as default context to the first washing machine', function(done){
+
+    laundromat.push(function(req, status, url, next){
+      expect(status).to.eql(200);
+      expect(url).to.eql(requestUrl);
+      return done();
+    });
+
+    laundromat.wash(req, res, function(){});
+
+  });
+  it('should sequentially call `_washingMachines` functions with parameters `req`, `status`, `url` and `next` continuation function', function(done){
+
+    var order = [];
+
+    laundromat.push(function(req, status, url, next){
+      order.push('A');
+      next();
+    }).push(function(req, status, url, next){
+      order.push('B');
+      process.nextTick(next);
+    }).push(function(req, status, url, next){
+      order.push('C');
+      next();
+    });
+
+    laundromat.wash(req, res, function(){
+      expect(order).to.deep.eql(['A', 'B', 'C']);
+      return done();
+    });
+
+  });
+  it('should pass an error to the next MW when `next` callback receives an error', function(done){
+
+    laundromat
+      .push(emptyWM)
+      .push(brokenWM)
+      .push(emptyWM);
+
+    laundromat.wash(req, res, function(err){
+      expect(err).to.be.an.instanceof(Error);
+      done();
+    });
+
+  });
+  it('should pass an error to the next MW when `next` callback receives a mis-formatted modification object', function(done){
+
+    laundromat
+      .push(emptyWM)
+      .push(function(req, status, url, next){
+        next(null, 'coucou');
+      });
+
+    laundromat.wash(req, res, function(err){
+      expect(err).to.be.an.instanceof(Error);
+      done();
+    });
+
+  });
+  it('should loop back to the first washing machine function when a change is performed - aka `next` callback receives a modification object', function(done){
+
+    var order = [];
+    var flag = true;
+
+    laundromat.push(function(req, status, url, next){
+      order.push('A');
+      next();
+    }).push(function(req, status, url, next){
+      order.push('B');
+
+      if(flag){
+        flag = !flag;
+        next(null, {
+          status : 303
+        });
+      } else {
+        next();
+      }
+
+    }).push(function(req, status, url, next){
+      order.push('C');
+      next();
+    });
+
+    res.redirect = function(){
+      expect(order).to.deep.eql(['A', 'B', 'A', 'B', 'C']);
+      return done();
+    };
+
+    laundromat.wash(req, res, function(){});
+
+  });
+  it('should increment its `_loopsCount` value when a new loop is performed', function(done){
+
+    var flag = true;
+
+    laundromat
+      .push(emptyWM)
+      .push(function(req, status, url, next){
+        if(flag){
+          flag = !flag;
+          return next(null, {
+            status : 303
+          });
+        } else {
+          next();
+        }
+      })
+      .push(emptyWM);
+
+    res.redirect = function(){
+      expect(laundromat).to.have.property('_loopsCount', 5);
+      return done();
+    };
+
+    laundromat.wash(req, res, function(){});
+
+  });
+  it('should pass an error when its `_loopsCount` value exceeds max count (computed from _washingMachines count)', function(done){
+
+    var n = 0;
+
+    laundromat
+      .push(emptyWM)
+      .push(function(req, status, url, next){
+        return next(null, {
+          status: 300 + n++
+        });
+      });
+
+    laundromat.wash(req, res, function(err){
+      expect(err).to.be.an.instanceof(Error);
+      done();
+    });
+
+  });
+  it('should provide a modified statusCode and url when loop starts again washing machine', function(done){
+
+    laundromat
+      .push(function(req, status, url, next){
+        if(status === 307) {
+          return done();
+        }
+        return next();
+      })
+      .push(function(req, status, url, next){
+        return next(null, {
+          status: 307
+        });
+      });
+
+    laundromat.wash(req, res, function(){});
+
+  });
+  it('should pass to the next washing machine when current one do not change statusCode or url values', function(done){
+
+    laundromat
+      .push(function(req, status, url, next){
+        return next(null, {
+          status: 307
+        });
+      })
+      .push(function(req, status, url, next){
+        return done();
+      });
+
+    laundromat.wash(req, res, function(){});
+
+  });
+  it('should perform a redirection when `status` or `url` properties have been modified', function(done){
+
+    res.redirect = function(status, url){
+      return done();
+    };
+
+    laundromat
+      .push(function(req, status, url, next){
+
+        if(status !== 307) {
+
+          return next(null, {
+            status: 307
+          });
+
+        } else {
+          return next();
+        }
+      });
+
+    laundromat.wash(req, res, function(){});
+
+  });
+  it('should call the next middleware when neither `status` nor `url` properties have been modified', function(done){
+
+    laundromat
+      .push(emptyWM)
+      .push(emptyWM);
+
+    laundromat.wash(req, res, function(){
+      done();
+    });
+
+  });
+  it('should call the next middleware when request is an xhr', function(done){
+
+    req.xhr = true;
+
+    laundromat
+      .push(brokenWM)
+      .push(emptyWM);
+
+    laundromat.wash(req, res, function(){
+      done();
+    });
+
+  });
 
 });
