@@ -49,9 +49,9 @@ Avoid multiple redirections when resolving seo friendly urls.
     .push(laundromat.wool)
   ;
 
-  // used after customization
+  // used as middleware after customization
 
-  app.use(laundromat.wash()); // laundromat.wash() returns a middleware
+  app.use(laundromat.wash);
 
 
 ```
