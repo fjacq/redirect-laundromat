@@ -1,6 +1,6 @@
 ## Redirect Laundromat
 
-[![Build Status](https://travis-ci.org/slyg/redirect-laundromat.svg?branch=master)](https://travis-ci.org/slyg/redirect-laundromat)
+[![Build Status](https://travis-ci.org/slyg/redirect-laundromat.svg?branch=master)](https://travis-ci.org/slyg/redirect-laundromat) [![Coverage Status](https://coveralls.io/repos/slyg/redirect-laundromat/badge.png?branch=master)](https://coveralls.io/r/slyg/redirect-laundromat?branch=master)
 
 ### Goal
 
