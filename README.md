@@ -1,5 +1,7 @@
 ## Redirect Laundromat
 
+[![Build Status](https://travis-ci.org/slyg/redirect-laundromat.svg?branch=master)](https://travis-ci.org/slyg/redirect-laundromat)
+
 ### Goal
 
 Avoid multiple redirections when resolving seo friendly urls.
