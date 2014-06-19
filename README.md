@@ -1,16 +1,18 @@
 ## Redirect Laundromat
 
-## Goal
+### Goal
 
 Avoid multiple redirections when resolving seo friendly urls.
 
-## Proposed solution
+### Proposed solution
 
 - expose a middleware (possibly used as filter, configurable)
 - modular resolutions (washing machines)
 - middleware-like architecture
 
-## Proposed usage
+### Proposed usage
+
+Configure middleware adding _washing machines_ functions :
 
 ```javascript
 
@@ -49,16 +51,11 @@ Avoid multiple redirections when resolving seo friendly urls.
     .push(laundromat.wool)
   ;
 
-  // used as middleware after customization
-
-  app.use(laundromat.wash);
-
-
 ```
 
-## Special rules
-
-- If there is more loop than washing-machines an error is passed to the next MW ... well that could change
-- ...
+Then use customized middleware :
 
 
+```javascript
+  app.use(laundromat.wash);
+```
