@@ -9,7 +9,7 @@
   "scripts": {
     "test": "./node_modules/jshint/bin/jshint --verbose lib/ test/ && ./node_modules/mocha/bin/mocha -R spec test/",
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha test/*.test.js",
-    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --require test/support/env --reporter spec"
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec"
   },
   "repository": {
     "type": "git",
