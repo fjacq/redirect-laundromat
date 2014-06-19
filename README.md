@@ -12,6 +12,8 @@ Avoid multiple redirections when resolving seo friendly urls.
 
 ### Proposed usage
 
+Configure middleware adding _washing machines_ functions :
+
 ```javascript
 
   var laundromat = new Laundromat();
@@ -49,9 +51,11 @@ Avoid multiple redirections when resolving seo friendly urls.
     .push(laundromat.wool)
   ;
 
-  // used as middleware after customization
+```
 
+Then use customized middleware :
+
+
+```javascript
   app.use(laundromat.wash);
-
-
 ```
