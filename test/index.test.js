@@ -125,6 +125,19 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     laundromat.wash(req, res, function(){});
 
   });
+  it('should provide statusCode 200 by default as context to the first washing machine', function(done){
+
+    res.statusCode = undefined;
+
+    laundromat.push(function(req, status, url, next){
+      expect(status).to.eql(200);
+      expect(url).to.eql(requestUrl);
+      return done();
+    });
+
+    laundromat.wash(req, res, function(){});
+
+  });
   it('should sequentially call `_washingMachines` functions with parameters `req`, `status`, `url` and `next` continuation function', function(done){
 
     var order = [];
@@ -187,7 +200,8 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
       if(flag){
         flag = !flag;
         next(null, {
-          status : 303
+          status : 303,
+          url : 'http://so.me/new/url'
         });
       } else {
         next();
