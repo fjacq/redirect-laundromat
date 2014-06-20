@@ -21,7 +21,7 @@ describe('Laundromat instance - `laundromat`', function(){
 
   var laundromat;
 
-  function washingMachine(req, status, url, next){}
+  function washingMachine(req, statusCode, url, next){}
 
   beforeEach(function(){
     laundromat = new Laundromat();
@@ -72,17 +72,17 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
   req,
   requestUrl = 'http://so.me/stuff';
 
-  function emptyWM(req, status, url, next){
+  function emptyWM(req, statusCode, url, next){
     next();
   }
 
-  function brokenWM(req, status, url, next){
+  function brokenWM(req, statusCode, url, next){
     next(new Error('Lime-scale failure'));
   }
 
-  function cleaningWM(req, status, url, next){
+  function cleaningWM(req, statusCode, url, next){
     next(null, {
-      status : 307,
+      statusCode : 307,
       url : 'http://so.me/new/stuff'
     });
   }
@@ -116,8 +116,8 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
   });
   it('should provide `res`\'s statusCode and url as default context to the first washing machine', function(done){
 
-    laundromat.push(function(req, status, url, next){
-      expect(status).to.eql(200);
+    laundromat.push(function(req, statusCode, url, next){
+      expect(statusCode).to.eql(200);
       expect(url).to.eql(requestUrl);
       return done();
     });
@@ -129,8 +129,8 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
 
     res.statusCode = undefined;
 
-    laundromat.push(function(req, status, url, next){
-      expect(status).to.eql(200);
+    laundromat.push(function(req, statusCode, url, next){
+      expect(statusCode).to.eql(200);
       expect(url).to.eql(requestUrl);
       return done();
     });
@@ -138,17 +138,17 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     laundromat.wash(req, res, function(){});
 
   });
-  it('should sequentially call `_washingMachines` functions with parameters `req`, `status`, `url` and `next` continuation function', function(done){
+  it('should sequentially call `_washingMachines` functions with parameters `req`, `statusCode`, `url` and `next` continuation function', function(done){
 
     var order = [];
 
-    laundromat.push(function(req, status, url, next){
+    laundromat.push(function(req, statusCode, url, next){
       order.push('A');
       next();
-    }).push(function(req, status, url, next){
+    }).push(function(req, statusCode, url, next){
       order.push('B');
       process.nextTick(next);
-    }).push(function(req, status, url, next){
+    }).push(function(req, statusCode, url, next){
       order.push('C');
       next();
     });
@@ -176,7 +176,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
 
     laundromat
       .push(emptyWM)
-      .push(function(req, status, url, next){
+      .push(function(req, statusCode, url, next){
         next(null, 'coucou');
       });
 
@@ -191,23 +191,23 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     var order = [];
     var flag = true;
 
-    laundromat.push(function(req, status, url, next){
+    laundromat.push(function(req, statusCode, url, next){
       order.push('A');
       next();
-    }).push(function(req, status, url, next){
+    }).push(function(req, statusCode, url, next){
       order.push('B');
 
       if(flag){
         flag = !flag;
         next(null, {
-          status : 303,
+          statusCode : 303,
           url : 'http://so.me/new/url'
         });
       } else {
         next();
       }
 
-    }).push(function(req, status, url, next){
+    }).push(function(req, statusCode, url, next){
       order.push('C');
       next();
     });
@@ -226,11 +226,11 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
 
     laundromat
       .push(emptyWM)
-      .push(function(req, status, url, next){
+      .push(function(req, statusCode, url, next){
         if(flag){
           flag = !flag;
           return next(null, {
-            status : 303
+            statusCode : 303
           });
         } else {
           next();
@@ -252,9 +252,9 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
 
     laundromat
       .push(emptyWM)
-      .push(function(req, status, url, next){
+      .push(function(req, statusCode, url, next){
         return next(null, {
-          status: 300 + n++
+          statusCode: 300 + n++
         });
       });
 
@@ -267,15 +267,15 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
   it('should provide a modified statusCode and url when loop starts again washing machine', function(done){
 
     laundromat
-      .push(function(req, status, url, next){
-        if(status === 307) {
+      .push(function(req, statusCode, url, next){
+        if(statusCode === 307) {
           return done();
         }
         return next();
       })
-      .push(function(req, status, url, next){
+      .push(function(req, statusCode, url, next){
         return next(null, {
-          status: 307
+          statusCode: 307
         });
       });
 
@@ -285,31 +285,31 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
   it('should pass to the next washing machine when current one do not change statusCode or url values', function(done){
 
     laundromat
-      .push(function(req, status, url, next){
+      .push(function(req, statusCode, url, next){
         return next(null, {
-          status: 307
+          statusCode: 307
         });
       })
-      .push(function(req, status, url, next){
+      .push(function(req, statusCode, url, next){
         return done();
       });
 
     laundromat.wash(req, res, function(){});
 
   });
-  it('should perform a redirection when `status` or `url` properties have been modified', function(done){
+  it('should perform a redirection when `statusCode` or `url` properties have been modified', function(done){
 
-    res.redirect = function(status, url){
+    res.redirect = function(statusCode, url){
       return done();
     };
 
     laundromat
-      .push(function(req, status, url, next){
+      .push(function(req, statusCode, url, next){
 
-        if(status !== 307) {
+        if(statusCode !== 307) {
 
           return next(null, {
-            status: 307
+            statusCode: 307
           });
 
         } else {
@@ -320,7 +320,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     laundromat.wash(req, res, function(){});
 
   });
-  it('should call the next middleware when neither `status` nor `url` properties have been modified', function(done){
+  it('should call the next middleware when neither `statusCode` nor `url` properties have been modified', function(done){
 
     laundromat
       .push(emptyWM)

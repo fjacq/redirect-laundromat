@@ -23,7 +23,7 @@ Configure middleware adding _washing machines_ functions :
   // Set laundromat washing machines.
   //
   // On last washing machine change,
-  //  if new request (status & url) is different from the current one,
+  //  if new request (statusCode & url) is different from the current one,
   //  a redirection is performed,
   //  else continue to next middleware
 
@@ -31,7 +31,7 @@ Configure middleware adding _washing machines_ functions :
     
      // push a washing machine
 
-     .push(function whirlpool(req, status, url, next){
+     .push(function whirlpool(req, statusCode, url, next){
 
       // some logic ... then ...
 
@@ -43,7 +43,7 @@ Configure middleware adding _washing machines_ functions :
 
       // pass a modification so that it loops back to the first WM
       return next(null, {
-        status : 303,
+        statusCode : 303,
         url : 'http://so.me/st/uff'
       });
 
