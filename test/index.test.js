@@ -336,10 +336,23 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     req.xhr = true;
 
     laundromat
-      .push(brokenWM)
       .push(emptyWM);
 
     laundromat.wash(req, res, function(){
+      done();
+    });
+
+  });
+  it('should pass washing machine error as soon as it occurs', function(done){
+
+    laundromat
+      .push(emptyWM)
+      .push(brokenWM)
+      .push(emptyWM);
+
+    laundromat.wash(req, res, function(err){
+      expect(err).to.be.an.instanceof(Error)
+        .that.has.property('message', 'Lime-scale failure');
       done();
     });
 
