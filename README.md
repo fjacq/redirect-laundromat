@@ -6,13 +6,48 @@
 
 Avoid multiple redirections when resolving seo friendly urls.
 
-### Proposed solution
+### Principle
 
-- expose a middleware (possibly used as filter, configurable)
-- modular resolutions (washing machines)
-- middleware-like architecture
+- modular resolutions through standard middleware - named _washing machines_ (WM)
+- mimic standard middleware usage
+- expose a single middleware (possibly used as filter, configurable)
 
-### Proposed usage
+### Schema
+
+```
+      --------
+      | MW A |
+      --------
+         |
+         |
+         v
+  ----------------
+  | Laudromat MW |--------------|
+                                |
+  |              |              |
+                             --------
+  |              |           | MW B |
+                             --------
+  |              |              |
+                                |
+  |              |              v
+                             --------
+  |              |           | MW C |
+                             --------
+  |              |              |
+
+  | Laudromat MW |--------------|
+  ----------------
+         |
+         |
+         v
+      --------
+      | MW D |
+      --------
+```
+
+
+### Usage
 
 Configure middleware adding _washing machines_ functions :
 
@@ -20,37 +55,41 @@ Configure middleware adding _washing machines_ functions :
 
   var laundromat = new Laundromat();
 
-  // Set laundromat washing machines.
+  // Set laundromat _washing machines_ (that are actually standard middleware).
   //
-  // On last washing machine change,
+  // On last washing machine (WM) change,
   //  if new request (statusCode & url) is different from the current one,
   //  a redirection is performed,
   //  else continue to next middleware
 
   laundromat
     
-     // push a washing machine
+     // push middleware functions, named here _washing machines_ (WM)
 
-     .push(function whirlpool(req, statusCode, url, next){
+     .use(function whirlpool(req, res, next){
 
       // some logic ... then ...
 
       // change nothing and go to the next washing-machine (WM)
       return next();
 
-      // pass an error to the next middleware (MW)
+      // stop washing machines (WM) execution stack 
+      // and pass an error to the next middleware (MW)
       return next(new Error('Wow')); 
 
       // pass a modification so that it loops back to the first WM
-      return next(null, {
-        statusCode : 303,
-        url : 'http://so.me/st/uff'
-      });
+      // 
+      // `res.redirect` is actually a stub version of Express' method
+      //
+      // in this case redirect changes `req`'s `url` and `status` properties values
+      // then the laundromat WM stack is replayed
+      // 
+      return res.redirect(303, 'http://so.me/st/uff');
 
     })
-    .push(laundromat.whites) // laundromat-attached washing machine
-    .push(laundromat.delicates)
-    .push(laundromat.wool)
+    .use(laundromat.whites) // laundromat-attached washing machine
+    .use(laundromat.delicates)
+    .use(laundromat.wool)
   ;
 
 ```
