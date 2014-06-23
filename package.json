@@ -36,6 +36,7 @@
     "rewire": "^2.0.1"
   },
   "dependencies": {
-    "lodash": "^2.4.1"
+    "lodash": "^2.4.1",
+    "sinon": "^1.10.2"
   }
 }
