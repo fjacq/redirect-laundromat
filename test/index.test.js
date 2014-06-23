@@ -70,7 +70,8 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
 
   var laundromat,
   req,
-  requestUrl = 'http://so.me/stuff';
+  requestUrl = 'http://so.me/stuff',
+  newUrl = 'http://so.me/new/url';
 
   function emptyWM(req, res, next){
     next();
@@ -87,7 +88,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
   function cleaningWM(req, res, next){
     next(null, {
       statusCode : 307,
-      url : 'http://so.me/new/stuff'
+      url : newUrl
     });
   }
 
@@ -115,7 +116,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     expect(laundromat).to.have.property('wash')
       .that.is.a('function');
   });
-  it('should be signed as a middleware', function(){
+  it('should have a middleware signature', function(){
     expect(laundromat.wash.length).to.eql(3);
   });
   it('should provide `req` and `res` context to the first washing machine', function(done){
@@ -129,7 +130,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     laundromat.wash(req, res, function(){});
 
   });
-  it('should provide custom (stub) `res.redirect` method context to the first washing machine', function(done){
+  it('should provide custom (stubbed) `res.redirect` method context to the first washing machine', function(done){
 
     laundromat.use(function(req, res, next){
       expect(res.redirect).to.have.property('restore')
@@ -175,21 +176,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     });
 
   });
-  it('should pass an error to the next MW when a WM of the stack throws an error', function(done){
-
-    laundromat
-      .use(emptyWM)
-      .use(throwingWM)
-      .use(emptyWM);
-
-    laundromat.wash(req, res, function(err){
-      expect(err).to.be.an.instanceof(Error)
-        .that.has.property('message', 'Flooding error');
-      done();
-    });
-
-  });
-  it('should loop back to the first washing machine function when a change is performed - aka `next` callback receives a modification object', function(done){
+  it('should loop back to the first washing machine function when `res.redirect` is called with a new url', function(done){
 
     var order = [];
     var flag = true;
@@ -202,7 +189,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
 
       if(flag){
         flag = !flag;
-        return res.redirect(303, 'http://so.me/new/url');
+        return res.redirect(newUrl);
       } else {
         next();
       }
@@ -229,7 +216,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
       .use(function(req, res, next){
         if(flag){
           flag = !flag;
-          return res.redirect(303);
+          return res.redirect(303, newUrl);
         } else {
           next();
         }
@@ -251,7 +238,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     laundromat
       .use(emptyWM)
       .use(function(req, res, next){
-        return res.redirect(300 + n++);
+        return res.redirect(newUrl + n++);
       });
 
     laundromat.wash(req, res, function(err){
@@ -260,25 +247,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     });
 
   });
-  it('should provide a modified statusCode when loop starts again washing machines stack', function(done){
-
-    laundromat
-      .use(function(req, res, next){
-        if(res.statusCode === 307) {
-          return done();
-        }
-        return next();
-      })
-      .use(function(req, res, next){
-        return res.redirect(307);
-      });
-
-    laundromat.wash(req, res, function(){});
-
-  });
   it('should provide a modified `req.url` when loop starts again washing machine', function(done){
-
-    var newUrl = 'http://so.me/new/url';
 
     laundromat
       .use(function(req, res, next){
@@ -301,7 +270,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     laundromat
       .use(function(req, res, next){
         order.push('A');
-        return res.redirect(307);
+        return res.redirect(307, newUrl);
       })
       .use(function(req, res, next){
         expect(order).to.deep.eql(['A', 'A']);
@@ -323,10 +292,10 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
         if(res.statusCode === 303) {
           return next();
         }
-        return res.redirect(307);
+        return res.redirect(307, newUrl);
       })
       .use(function(req, res, next){
-        return res.redirect(303);
+        return res.redirect(303, newUrl);
       });
 
     laundromat.wash(req, res, function(){});
@@ -365,6 +334,18 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     laundromat.wash(req, res, function(err){
       expect(err).to.be.an.instanceof(Error)
         .that.has.property('message', 'Lime-scale failure');
+      done();
+    });
+
+  });
+  it('should restore `res.redirect()` original method', function(done){
+
+    laundromat
+      .use(emptyWM);
+
+    laundromat.wash(req, res, function(err){
+      expect(res.redirect).to.be.a('function')
+        .that.has.not.property('restore');
       done();
     });
 

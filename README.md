@@ -79,7 +79,8 @@ Configure middleware adding _washing machines_ functions :
 
       // pass a modification so that it loops back to the first WM
       // 
-      // `res.redirect` is actually a stub version of Express' method
+      // `res.redirect` is actually a stubbed version of Express' method
+      // that is restored after the laundromat has finished iterating
       //
       // in this case redirect changes `req`'s `url` and `status` properties values
       // then the laundromat WM stack is replayed
