@@ -57,32 +57,33 @@ Configure middleware adding _washing machines_ functions :
 
   // Set laundromat _washing machines_ (that are actually standard middleware).
   //
-  // On last washing machine (WM) change,
+  // On last _washing machine_ (WM) change,
   //  if new request (statusCode & url) is different from the current one,
   //  a redirection is performed,
   //  else continue to next middleware
 
   laundromat
     
-     // push middleware functions, named here _washing machines_ (WM)
+     // add middleware functions, named _washing machines_ (WM)
+     // to distinguish them from common Express middleware
 
      .use(function whirlpool(req, res, next){
 
       // some logic ... then ...
 
-      // change nothing and go to the next washing-machine (WM)
+      // change nothing and go to the next WM
       return next();
 
-      // stop washing machines (WM) execution stack 
-      // and pass an error to the next middleware (MW)
+      // stop WM execution stack 
+      // and pass an error to the next middleware
       return next(new Error('Wow')); 
 
-      // pass a modification so that it loops back to the first WM
-      // 
+      // trigger a redirection
+      //
       // `res.redirect` is actually a stubbed version of Express' method
       // that is restored after the laundromat has finished iterating
       //
-      // in this case redirect changes `req`'s `url` and `status` properties values
+      // in this case redirect changes `req`'s `url`,
       // then the laundromat WM stack is replayed
       // 
       return res.redirect(303, 'http://so.me/st/uff');
@@ -95,7 +96,7 @@ Configure middleware adding _washing machines_ functions :
 
 ```
 
-Then use customized middleware :
+Then use laundromat middleware in an Express app :
 
 
 ```javascript
