@@ -86,10 +86,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
   }
 
   function cleaningWM(req, res, next){
-    next(null, {
-      statusCode : 307,
-      url : newUrl
-    });
+    return res.redirect(newUrl);
   }
 
   beforeEach(function(){
@@ -100,6 +97,9 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
       protocol : 'http',
       xhr : false,
       host : 'so.me',
+      headers : {
+        host : 'so.me'
+      },
       path : '/stuff',
       ip : '127.0.0.1'
     };
@@ -121,45 +121,47 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
   });
   it('should provide `req` and `res` context to the first washing machine', function(done){
 
-    laundromat.use(function(req, res, next){
-      expect(req).to.deep.eql(req);
-      expect(res).to.deep.eql(res);
-      return done();
-    });
-
-    laundromat.wash(req, res, function(){});
+    laundromat
+      .use(function(req, res, next){
+        expect(req).to.deep.eql(req);
+        expect(res).to.deep.eql(res);
+        return done();
+      })
+      .wash(req, res, function(){});
 
   });
   it('should provide custom (stubbed) `res.redirect` method context to the first washing machine', function(done){
 
-    laundromat.use(function(req, res, next){
-      expect(res.redirect).to.have.property('restore')
-        .that.is.a('function');
-      return done();
-    });
-
-    laundromat.wash(req, res, function(){});
+    laundromat
+      .use(function(req, res, next){
+        expect(res.redirect).to.have.property('restore')
+          .that.is.a('function');
+        return done();
+      })
+      .wash(req, res, function(){});
 
   });
   it('should sequentially call `_washingMachines` functions with parameters `req`, `res` and `next` continuation function', function(done){
 
     var order = [];
 
-    laundromat.use(function(req, res, next){
-      order.push('A');
-      next();
-    }).use(function(req, res, next){
-      order.push('B');
-      process.nextTick(next);
-    }).use(function(req, res, next){
-      order.push('C');
-      next();
-    });
-
-    laundromat.wash(req, res, function(){
-      expect(order).to.deep.eql(['A', 'B', 'C']);
-      return done();
-    });
+    laundromat
+      .use(function(req, res, next){
+        order.push('A');
+        return next();
+      })
+      .use(function(req, res, next){
+        order.push('B');
+        process.nextTick(next);
+      })
+      .use(function(req, res, next){
+        order.push('C');
+        return next();
+      })
+      .wash(req, res, function(){
+        expect(order).to.deep.eql(['A', 'B', 'C']);
+        return done();
+      });
 
   });
   it('should pass an error to the next MW when WM passes an Error', function(done){
@@ -167,19 +169,23 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     laundromat
       .use(emptyWM)
       .use(brokenWM)
-      .use(emptyWM);
-
-    laundromat.wash(req, res, function(err){
-      expect(err).to.be.an.instanceof(Error)
-        .that.has.property('message', 'Lime-scale failure');
-      done();
-    });
+      .use(emptyWM)
+      .wash(req, res, function(err){
+        expect(err).to.be.an.instanceof(Error)
+          .that.has.property('message', 'Lime-scale failure');
+        return done();
+      });
 
   });
   it('should loop back to the first washing machine function when `res.redirect` is called with a new url', function(done){
 
     var order = [];
     var flag = true;
+
+    res.redirect = function(){
+      expect(order).to.deep.eql(['A', 'B', 'A', 'B', 'C']);
+      return done();
+    };
 
     laundromat.use(function(req, res, next){
       order.push('A');
@@ -191,25 +197,24 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
         flag = !flag;
         return res.redirect(newUrl);
       } else {
-        next();
+        return next();
       }
 
     }).use(function(req, res, next){
       order.push('C');
       return next();
-    });
-
-    res.redirect = function(){
-      expect(order).to.deep.eql(['A', 'B', 'A', 'B', 'C']);
-      return done();
-    };
-
-    laundromat.wash(req, res, function(){});
+    })
+    .wash(req, res, function(){});
 
   });
   it('should increment its `_loopsCount` value when a new loop is performed', function(done){
 
     var flag = true;
+
+    res.redirect = function(){
+      expect(laundromat).to.have.property('_loopsCount', 5);
+      return done();
+    };
 
     laundromat
       .use(emptyWM)
@@ -218,17 +223,11 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
           flag = !flag;
           return res.redirect(303, newUrl);
         } else {
-          next();
+          return next();
         }
       })
-      .use(emptyWM);
-
-    res.redirect = function(){
-      expect(laundromat).to.have.property('_loopsCount', 5);
-      return done();
-    };
-
-    laundromat.wash(req, res, function(){});
+      .use(emptyWM)
+      .wash(req, res, function(){});
 
   });
   it('should pass an error when its `_loopsCount` value exceeds max count (computed from _washingMachines count)', function(done){
@@ -239,12 +238,11 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
       .use(emptyWM)
       .use(function(req, res, next){
         return res.redirect(newUrl + n++);
+      })
+      .wash(req, res, function(err){
+        expect(err).to.be.an.instanceof(Error);
+        return done();
       });
-
-    laundromat.wash(req, res, function(err){
-      expect(err).to.be.an.instanceof(Error);
-      done();
-    });
 
   });
   it('should provide a modified `req.url` when loop starts again washing machine', function(done){
@@ -258,9 +256,8 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
       })
       .use(function(req, res, next){
         return res.redirect(307, newUrl);
-      });
-
-    laundromat.wash(req, res, function(){});
+      })
+      .wash(req, res, function(){});
 
   });
   it('should pass to the next washing machine when current one do not perform any redirection', function(done){
@@ -275,9 +272,8 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
       .use(function(req, res, next){
         expect(order).to.deep.eql(['A', 'A']);
         return done();
-      });
-
-    laundromat.wash(req, res, function(){});
+      })
+      .wash(req, res, function(){});
 
   });
   it('should perform a redirection when `statusCode` or `url` properties have been modified', function(done){
@@ -296,20 +292,18 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
       })
       .use(function(req, res, next){
         return res.redirect(303, newUrl);
-      });
-
-    laundromat.wash(req, res, function(){});
+      })
+      .wash(req, res, function(){});
 
   });
   it('should call the next middleware when no redirection has been done', function(done){
 
     laundromat
       .use(emptyWM)
-      .use(emptyWM);
-
-    laundromat.wash(req, res, function(){
-      done();
-    });
+      .use(emptyWM)
+      .wash(req, res, function(){
+        return done();
+      });
 
   });
   it('should call the next middleware when request is an xhr', function(done){
@@ -317,11 +311,10 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     req.xhr = true;
 
     laundromat
-      .use(emptyWM);
-
-    laundromat.wash(req, res, function(){
-      done();
-    });
+      .use(emptyWM)
+      .wash(req, res, function(){
+        return done();
+      });
 
   });
   it('should pass washing machine error as soon as it occurs', function(done){
@@ -329,24 +322,39 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
     laundromat
       .use(emptyWM)
       .use(brokenWM)
-      .use(emptyWM);
-
-    laundromat.wash(req, res, function(err){
-      expect(err).to.be.an.instanceof(Error)
-        .that.has.property('message', 'Lime-scale failure');
-      done();
-    });
+      .use(emptyWM)
+      .wash(req, res, function(err){
+        expect(err).to.be.an.instanceof(Error)
+          .that.has.property('message', 'Lime-scale failure');
+        return done();
+      });
 
   });
   it('should restore `res.redirect()` original method', function(done){
 
     laundromat
+      .use(emptyWM)
+      .wash(req, res, function(err){
+        expect(res.redirect).to.be.a('function')
+          .that.has.not.property('restore');
+        return done();
+      });
+
+  });
+  it('should reset `_loopsCount` property after each call', function(done){
+
+    var order = [];
+    var shallPass = false;
+
+    laundromat
+      .use(emptyWM)
       .use(emptyWM);
 
-    laundromat.wash(req, res, function(err){
-      expect(res.redirect).to.be.a('function')
-        .that.has.not.property('restore');
-      done();
+    laundromat.wash(req, res, function(){
+      laundromat.wash(req, res, function(){
+        expect(laundromat._loopsCount).to.eql(2);
+        return done();
+      });
     });
 
   });
