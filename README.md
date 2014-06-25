@@ -12,44 +12,10 @@ Avoid multiple redirections when resolving seo friendly urls.
 - mimic standard middleware usage
 - expose a single middleware (possibly used as filter, configurable)
 
-### Schema
-
-```
-      --------
-      | MW A |
-      --------
-         |
-         |
-         v
-  ----------------
-  | Laudromat MW |--------------|
-                                |
-  |              |              |
-                             --------
-  |              |           | MW B |
-                             --------
-  |              |              |
-                                |
-  |              |              v
-                             --------
-  |              |           | MW C |
-                             --------
-  |              |              |
-
-  | Laudromat MW |--------------|
-  ----------------
-         |
-         |
-         v
-      --------
-      | MW D |
-      --------
-```
-
 
 ### Usage
 
-Configure middleware adding _washing machines_ functions :
+Configure middleware by adding _washing machines_ functions :
 
 ```javascript
 
@@ -102,3 +68,38 @@ Then use laundromat middleware in an Express app :
 ```javascript
   app.use(laundromat.wash);
 ```
+
+### Schema
+
+```
+        --------
+        | MW A |
+        --------
+           |
+           v
+    ----------------
+    | Laudromat MW |--------------|
+    |              |              v
+                               -------- <-------
+    |              |           | MW B |        |
+                               -------- <---   |
+    |              |              |        |   | 
+                                  v        |   | (req, res) objects possibly looping
+    |              |           --------    |   | when redirection triggered
+                               | MW C |----|   | by MW B, C or C
+    |              |           --------        | 
+                                  |            |
+    |              |              v            |
+                               --------        |
+    |              |           | MW D |--------|
+                               --------
+    |              |              |
+    | Laudromat MW |<-------------|
+    ----------------
+           |
+           v
+        --------
+        | MW E |
+        --------
+```
+
