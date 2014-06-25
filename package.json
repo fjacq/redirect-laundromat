@@ -18,6 +18,8 @@
   },
   "keywords": [
     "redirect",
+    "express",
+    "multiple redirections",
     "middleware"
   ],
   "author": "Sylvain Faucherand <syl.faucherand@gmail.com>",
