@@ -12,6 +12,21 @@ Avoid multiple redirections when resolving seo friendly urls.
 - mimic standard middleware usage
 - expose a single middleware (possibly used as filter, configurable)
 
+### Use case example
+
+Replace the following redirections performed by several middleware functions :
+
+  > Incoming `http://www.stu.ff/cn/?noise=1` 
+  >
+  > - `removeSubdomain    > 303 http://stu.ff/cn/?noise=1` 
+  > - `setDefaultLanguage > 307 http://stu.ff/en/?noise=1` 
+  > - `removeQueryParams  > 301 http://stu.ff/en/`
+
+by a single redirection keeping the same middleware functions with _laundromat_.
+
+  > Incoming `http://www.stu.ff/cn/?noise=1` 
+  >
+  > - `laundromat > 301 http://stu.ff/en/`
 
 ### Usage
 
