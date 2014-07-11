@@ -1,6 +1,6 @@
 {
   "name": "redirect-laundromat",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Modular redirection resolutions middleware",
   "main": "lib/",
   "directories": {
