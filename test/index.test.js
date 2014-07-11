@@ -332,11 +332,18 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
   });
   it('should restore `res.redirect()` original method', function(done){
 
+    res.redirect.flag = true;
+
     laundromat
       .use(emptyWM)
+      .use(function(req, res, next){
+        expect(res.redirect).not.to.have.property('flag');
+        next();
+      })
       .wash(req, res, function(err){
         expect(res.redirect).to.be.a('function')
           .that.has.not.property('restore');
+        expect(res.redirect).to.have.property('flag');
         return done();
       });
 
