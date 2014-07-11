@@ -34,6 +34,10 @@ Configure middleware by adding _washing machines_ functions :
 
 ```javascript
 
+  var Laundromat = require('./lib');
+
+  // ...
+
   var laundromat = new Laundromat();
 
   // Set laundromat _washing machines_ (that are actually standard middleware).
