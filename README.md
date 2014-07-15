@@ -74,19 +74,25 @@ Configure middleware by adding _washing machines_ functions :
       return res.redirect(303, 'http://so.me/st/uff');
 
     })
-    .use(laundromat.whites) // laundromat-attached washing machine
+    .use(laundromat.whites) // laundromat-attached washing machine, just for fun
     .use(laundromat.delicates)
     .use(laundromat.wool)
   ;
 
 ```
 
-Then use laundromat middleware in an Express app :
+Then use laundromat middleware in an Express app for example :
 
 
 ```javascript
   app.use(laundromat.wash);
 ```
+
+### Will it blend ?
+
+Nope.
+
+Number of loops is limited at an average of 2 per middleware. If max number is reached, you probably have a redirection loop problem and an error is passed to the next middleware.
 
 ### Schema
 
@@ -101,16 +107,16 @@ Then use laundromat middleware in an Express app :
     |              |              v
                                -------- <-------
     |              |           | MW B |        |
-                               -------- <---   |
-    |              |              |        |   | 
+         INSERT                -------- <---   |
+    |     COIN     |              |        |   | 
                                   v        |   | (req, res) objects possibly looping
-    |              |           --------    |   | when redirection triggered
-                               | MW C |----|   | by MW B, C or C
+    |      ||      |           --------    |   | when redirection triggered
+           ||                  | MW C |----|   | by MW B, C or C
     |              |           --------        | 
                                   |            |
-    |              |              v            |
-                               --------        |
-    |              |           | MW D |--------|
+    |     ____     |              v            |
+          |  |                 --------        |
+    |     |__|     |           | MW D |--------|
                                --------
     |              |              |
     | Laudromat MW |<-------------|
@@ -121,4 +127,3 @@ Then use laundromat middleware in an Express app :
         | MW E |
         --------
 ```
-
