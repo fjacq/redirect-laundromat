@@ -50,7 +50,7 @@ Configure middleware by adding _washing machines_ functions :
   laundromat
     
      // add middleware functions, named _washing machines_ (WM)
-     // to distinguish them from common Express middleware
+     // to distinguish them from common Connect middleware
 
      .use(function whirlpool(req, res, next){
 
