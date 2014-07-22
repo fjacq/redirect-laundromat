@@ -164,7 +164,7 @@ describe('Laundromat middleware - `e.g. laundromat.wash()`', function(){
       });
 
   });
-  it('should pass an error to the next MW when WM passes an Error', function(done){
+  it('should pass an error to the next WM when WM passes an Error', function(done){
 
     laundromat
       .use(emptyWM)
